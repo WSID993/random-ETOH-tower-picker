@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>ETOH Tower Random Picker</title>
+<style>
+  body {
+    background: #0f0f0f;
+    color: #f0f0f0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 40px;
+  }
+  .box {
+    background: #1b1b1b;
+    padding: 30px;
+    border-radius: 12px;
+    width: 480px;
+    text-align: center;
+  }
+  button, select {
+    padding: 10px 20px;
+    margin: 10px 5px 0 5px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .result {
+    margin-top: 20px;
+    font-size: 17px;
+    line-height: 1.6;
+  }
+  .history {
+    margin-top: 20px;
+    font-size: 14px;
+    max-height: 200px;
+    overflow-y: auto;
+    text-align: left;
+    border-top: 1px solid #333;
+    padding-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h2>ETOH Random Tower picker</h2>
+  
+  <!-- 난이도 필터 -->
+  <label for="diffFilter">difficuly filter:</label>
+  <select id="diffFilter">
+    <option value="all">All</option>
+    <option value="Easy">Easy</option>
+    <option value="Medium">Medium</option>
+    <option value="Hard">Hard</option>
+    <option value="Difficult">Difficult</option>
+    <option value="Challenging">Challenging</option>
+    <option value="Intense">Intense</option>
+    <option value="Remorseless">Remorseless</option>
+    <option value="Insane">Insane</option>
+    <option value="Extreme">Extreme</option>
+    <option value="Terrifying">Terrifying</option>
+    <option value="Catastrophic">Catastrophic</option>
+    <option value="Eternal">Eternal</option>
+  </select>
+
+  <br>
+  <button onclick="pickTower()">pick!</button>
+  <button onclick="resetHistory()">Redundancy Initialization</button>
+
+  <div class="result" id="result">click the button</div>
+
+  <div class="history" id="history"></div>
+</div>
+
+<script>
+let towers = [];
+let historyList = [];
+let availableTowers = [];
+
+// JSON 로드
+fetch("towers.json")
+  .then(res => res.json())
+  .then(data => {
+    towers = data;
+    availableTowers = [...towers]; // 처음엔 전체 사용 가능
+  })
+  .catch(err => {
+    document.getElementById("result").innerText = "failed tower loading.";
+    console.error(err);
+  });
+
+// 뽑기
+function pickTower() {
+  const filter = document.getElementById("diffFilter").value;
+  let candidates = availableTowers;
+
+  if (filter !== "all") {
+    candidates = candidates.filter(t => t.diff === filter);
+  }
+
+  if (candidates.length === 0) {
+    document.getElementById("result").innerHTML = "<b>No towers left!</b>";
+    return;
+  }
+
+  const t = candidates[Math.floor(Math.random() * candidates.length)];
+
+  // 결과 출력
+  document.getElementById("result").innerHTML =
+    `Ring: <b>${t.ring}</b><br>
+     difficuly: <b>${t.diff}</b><br>
+     name: <b>${t.name}</b>`;
+
+  // 중복 방지
+  historyList.push(t);
+  availableTowers = availableTowers.filter(x => x !== t);
+
+  // 기록 업데이트
+  updateHistory();
+}
+
+// 뽑기 기록 표시
+function updateHistory() {
+  const h = historyList.map((t,i) => `${i+1}. ${t.name} (${t.diff}, ${t.ring})`).join("<br>");
+  document.getElementById("history").innerHTML = h;
+}
+
+// 중복 초기화
+function resetHistory() {
+  availableTowers = [...towers];
+  historyList = [];
+  document.getElementById("history").innerHTML = "";
+  document.getElementById("result").innerText = "Redundant initialization completed! Can be pulled again.";
+}
+</script>
+
+</body>
+</html>
